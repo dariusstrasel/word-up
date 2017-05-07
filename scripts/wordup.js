@@ -73,23 +73,28 @@ function checkIfWordIsReal(word) {
 
     // make an AJAX call to the Pearson API
     $.ajax({
-        // TODO 13 what should the url be?
-        url: "www.todo13.com",
+        url: "http://api.pearson.com/v2/dictionaries/entries?headword=" + word,
         success: function(response) {
             console.log("We received a response from Pearson!");
 
             // let's print the response to the console so we can take a looksie
             console.log(response);
 
-            // TODO 14
-            // Replace the 'true' below.
-            // If the response contains any results, then the word is legitimate.
-            // Otherwise, it is not.
-            var theAnswer = true;
+            if (response.results.length === 0){
+                var theAnswer = false
+            } else {
+                var theAnswer = true;
+            }
+
+            console.log("The answer is: " + theAnswer);
 
             // TODO 15
             // Update the corresponding wordSubmission in the model
-
+            model.wordSubmissions.forEach(function(submission){
+                if (submission.word == word){
+                    submission.isRealWord = theAnswer;
+                }
+            });
 
             // re-render
             render();
@@ -112,10 +117,7 @@ function render() {
 
     // update the score on the scoreboard
     $("#current-score").text(currentScore());
-
-    // TODO 2
-    // Update the curent time remaining on the scoreboard.
-
+    $("#time-remaining").text(model.secondsRemaining);
 
     // if the game has not started yet, just hide the #game container and exit
     if (model.gameHasStarted == false) {
@@ -128,25 +130,27 @@ function render() {
     // clear stuff
     $("#allowed-letters").empty();
     $("#word-submissions").empty();
-    // TODO 10
-    // Add a few things to the above code block (underneath "// clear stuff").
-
+    $('#textbox')
+        .attr("disabled", false)
+        .removeClass("bad-attempt");
+    $('.disallowed-letter')
+        .remove();
 
     // reveal the #game container
     $("#game").show();
 
     // render the letter tiles
-    var letterChips = model.allowedLetters.map(letterChip)
+    var letterChips = model.allowedLetters.map(letterChip);
     $("#allowed-letters").append(letterChips);
 
     // TODO 11
     // Render the word submissions
-
+    var submissionChips = model.wordSubmissions.map(wordSubmissionChip);
+    $("#word-submissions").append(submissionChips);
 
     // Set the value of the textbox
     $("#textbox").val(model.currentAttempt);
-    // TODO 3
-    // Give focus to the textbox.
+    $('#textbox').focus();
 
 
     // if the current word attempt contains disallowed letters,
@@ -158,17 +162,16 @@ function render() {
         // show the disallowed letters underneath
         var redLetterChips = disallowedLetters.map(disallowedLetterChip);
 
-        // TODO 8
-        // append the red letter chips to the form
+        $("#word-attempt-form").append(redLetterChips);
 
     }
 
     // if the game is over
-    var gameOver = model.secondsRemaining <= 0
+    var gameOver = model.secondsRemaining <= 0;
     if (gameOver) {
-        // TODO 9
-        // disable the text box and clear its contents
-
+        $("#textbox")
+            .attr('disabled', true)
+            .empty();
     }
 }
 
@@ -181,7 +184,7 @@ function letterChip(letter) {
     // a chip to display the letter
     var letterChip = $("<span></span>")
         .text(letter)
-        .attr("class", "tag tag-lg allowed-letter")
+        .attr("class", "tag tag-lg allowed-letter");
 
     // a smaller chip to indicate how many points this letter is worth
     var scoreChip = $("<span></span>")
@@ -238,11 +241,11 @@ $(document).ready(function() {
         render();
     });
 
-    // TODO 6
-    // Add another event handler with a callback function.
-    // When the textbox content changes,
-    // update the .currentAttempt property of the model and re-render
-
+    $("#textbox").on('input', function() {
+            // start the game and re-render
+        model.currentAttempt = $("#textbox").val();
+        render();
+        });
 
     // when the form is submitted
     $("#word-attempt-form").submit(function(evt) {
@@ -277,10 +280,8 @@ var scrabblePointsForEachLetter = {
  * meaning it is not a member of the .allowedLetters list from the current model
  */
 function isDisallowedLetter(letter) {
-    // TODO 7
-    // This should return true if the letter is not an element of
-    // the .allowedLetters list in the model
-    return false;
+    // Return whether 'letter' is inside the list.
+    return model.allowedLetters.indexOf(letter) === -1;
 }
 
 /**
@@ -297,9 +298,7 @@ function disallowedLettersInWord(word) {
  * i.e. the word does not contain any disallowed letters
  */
 function containsOnlyAllowedLetters(word) {
-    // TODO 12
-    // Return the actual answer.
-    return true;
+    return model.allowedLetters.indexOf(word) !== -1;
 }
 
 /**
