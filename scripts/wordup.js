@@ -196,7 +196,6 @@ function wordSubmissionChip(wordSubmission) {
 
     // if we know the status of this word (real word or not), then add a green score or red X
     if (wordSubmission.hasOwnProperty("isRealWord")) {
-        var scoreChip = $("<span></span>").text("⟐");
         var scoreChip = $("<span></span>");
         scoreChip.text(wordSubmission.isRealWord ? wordScore(wordSubmission.word) : "X");
         scoreChip.attr("class", "tag tag-sm").addClass(wordSubmission.isRealWord ? "tag-primary" : "tag-danger");
@@ -285,7 +284,7 @@ function disallowedLettersInWord(word) {
  * i.e. the word does not contain any disallowed letters
  */
 function containsOnlyAllowedLetters(word) {
-    return model.allowedLetters.indexOf(word) !== -1;
+    return disallowedLettersInWord(word).length == 0
 }
 
 /**
