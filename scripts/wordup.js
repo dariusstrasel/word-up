@@ -51,9 +51,9 @@ function endGame() {
  */
 function addNewWordSubmission(word) {
     // Do we already have a wordSubmission with this word?
-    // TODO 21
-    // replace the hardcoded 'false' with the real answer
-    var alreadyUsed = false;
+    var alreadyUsed = model.wordSubmissions.filter(function (submission) {
+            return submission.word == word
+        }).length > 0;
 
     // if the word is valid and hasn't already been used, add it
     if (containsOnlyAllowedLetters(word) && alreadyUsed == false) {
@@ -79,17 +79,10 @@ function checkIfWordIsReal(word) {
 
             // let's print the response to the console so we can take a looksie
             console.log(response);
-
-            if (response.results.length === 0){
-                var theAnswer = false
-            } else {
-                var theAnswer = true;
-            }
+            var theAnswer = response.results.length > 0;
 
             console.log("The answer is: " + theAnswer);
 
-            // TODO 15
-            // Update the corresponding wordSubmission in the model
             model.wordSubmissions.forEach(function(submission){
                 if (submission.word == word){
                     submission.isRealWord = theAnswer;
@@ -143,8 +136,6 @@ function render() {
     var letterChips = model.allowedLetters.map(letterChip);
     $("#allowed-letters").append(letterChips);
 
-    // TODO 11
-    // Render the word submissions
     var submissionChips = model.wordSubmissions.map(wordSubmissionChip);
     $("#word-submissions").append(submissionChips);
 
@@ -206,14 +197,10 @@ function wordSubmissionChip(wordSubmission) {
     // if we know the status of this word (real word or not), then add a green score or red X
     if (wordSubmission.hasOwnProperty("isRealWord")) {
         var scoreChip = $("<span></span>").text("⟐");
-        // TODO 17
-        // give the scoreChip appropriate text content
-
-        // TODO 18
-        // give the scoreChip appropriate css classes
-
-        // TODO 16
-        // append scoreChip into wordChip
+        var scoreChip = $("<span></span>");
+        scoreChip.text(wordSubmission.isRealWord ? wordScore(wordSubmission.word) : "X");
+        scoreChip.attr("class", "tag tag-sm").addClass(wordSubmission.isRealWord ? "tag-primary" : "tag-danger");
+        wordChip.append(scoreChip)
 
     }
 
@@ -326,10 +313,7 @@ function wordScore(word) {
     // split the word into a list of letters
     var letters = word.split("");
 
-    // TODO 19
-    // Replace the empty list below.
-    // Map the list of letters into a list of scores, one for each letter.
-    var letterScores = [];
+    var letterScores = letters.map(letterScore);
 
     // return the total sum of the letter scores
     return letterScores.reduce(add, 0);
@@ -351,9 +335,8 @@ function currentScore() {
         }
     });
 
-    // TODO 20
-    // return the total sum of the word scores
-    return 0;
+
+    return wordScores.reduce(add, 0)
 }
 
 
